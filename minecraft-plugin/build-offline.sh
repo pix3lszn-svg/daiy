@@ -81,5 +81,5 @@ java -cp "target/test:target/classes:$WORK/deps/gson-2.11.0.jar" PatreonClientTe
 
 # 6. Package
 cp src/main/resources/plugin.yml src/main/resources/config.yml target/classes/
-jar cf target/EmeraldPerks-1.1.0.jar -C target/classes .
-echo "Built target/EmeraldPerks-1.1.0.jar"
+jar cf target/EmeraldPerks-1.2.0.jar -C target/classes .
+echo "Built target/EmeraldPerks-1.2.0.jar"

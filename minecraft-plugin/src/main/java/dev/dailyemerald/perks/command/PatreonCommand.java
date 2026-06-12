@@ -49,6 +49,9 @@ public final class PatreonCommand implements TabExecutor {
             case "priority" -> {
                 if (requireAdmin(sender)) priority(sender, args);
             }
+            case "grant" -> {
+                if (requireAdmin(sender)) grant(sender, args);
+            }
             default -> help(sender);
         }
         return true;
@@ -261,6 +264,56 @@ public final class PatreonCommand implements TabExecutor {
         }
     }
 
+    /**
+     * Bulk grant by IGN, no emails needed — built for pasting a comment
+     * section's worth of usernames in one go:
+     *   /patreon grant board Alice Bob Carol_123
+     * Each name is whitelisted immediately; perks land when they first join.
+     * These are manual grants, so the Patreon sync never revokes them.
+     */
+    private void grant(CommandSender sender, String[] args) {
+        if (args.length < 3 || Role.fromString(args[1]) == null) {
+            sender.sendMessage(Component.text("Usage: /patreon grant <board|journalist> <name> [name] [name] ...",
+                    NamedTextColor.YELLOW));
+            return;
+        }
+        Role role = Role.fromString(args[1]);
+        List<String> granted = new java.util.ArrayList<>();
+        List<String> skipped = new java.util.ArrayList<>();
+        for (int i = 2; i < args.length; i++) {
+            String name = args[i].trim();
+            if (name.isEmpty()) continue;
+            if (!name.matches("[\\w.*+-]{1,32}")) {
+                skipped.add(name);
+                continue;
+            }
+            Player online = Bukkit.getPlayerExact(name);
+            if (online != null) {
+                store.setRole(online.getUniqueId(), role, true);
+                plugin.morphManager().unmorphIfNoLongerAllowed(online, role);
+                sync.giveHornIfOwed(online);
+                plugin.applyRoleSideEffects(online);
+                online.sendMessage(Component.text("You were granted the ", NamedTextColor.GREEN)
+                        .append(Component.text(role.displayName(), NamedTextColor.GOLD))
+                        .append(Component.text(" perks — try /morph!", NamedTextColor.GREEN)));
+            } else {
+                store.addPendingManual(name, role);
+                plugin.whitelistAdd(name);
+            }
+            granted.add(name);
+        }
+        sender.sendMessage(Component.text("Granted " + role.displayName() + " to " + granted.size()
+                        + " player(s): " + String.join(", ", granted), NamedTextColor.GREEN));
+        if (!skipped.isEmpty()) {
+            sender.sendMessage(Component.text("Skipped (not valid usernames): " + String.join(", ", skipped),
+                    NamedTextColor.YELLOW));
+        }
+        sender.sendMessage(Component.text(
+                "Offline names were whitelisted and get their perks on first join. "
+                        + "Note: these grants are manual — remove with /patreon set <name> none.",
+                NamedTextColor.GRAY));
+    }
+
     private void help(CommandSender sender) {
         sender.sendMessage(Component.text("— EmeraldPerks —", NamedTextColor.GOLD));
         sender.sendMessage(Component.text("/patreon link <email> — claim your patron perks", NamedTextColor.YELLOW));
@@ -274,6 +327,8 @@ public final class PatreonCommand implements TabExecutor {
             sender.sendMessage(Component.text("/patreon link <mcname> <email> — pre-link & whitelist a patron",
                     NamedTextColor.GRAY));
             sender.sendMessage(Component.text("/patreon priority <add|remove|list> [player]", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/patreon grant <board|journalist> <name...> — bulk grant by IGN",
+                    NamedTextColor.GRAY));
         }
     }
 
@@ -294,7 +349,7 @@ public final class PatreonCommand implements TabExecutor {
         if (args.length == 1) {
             List<String> subs = new java.util.ArrayList<>(List.of("link", "unlink", "status"));
             if (sender.hasPermission(ADMIN_PERM)) {
-                subs.addAll(List.of("sync", "set", "horn", "priority"));
+                subs.addAll(List.of("sync", "set", "horn", "priority", "grant"));
             }
             return subs.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }
@@ -304,6 +359,9 @@ public final class PatreonCommand implements TabExecutor {
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
             return List.of("board", "journalist", "none");
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("grant")) {
+            return List.of("board", "journalist");
         }
         return List.of();
     }

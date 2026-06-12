@@ -112,6 +112,18 @@ public final class PlayerDataStore {
         save();
     }
 
+    /** Pending grant with no Patreon email behind it (bulk/manual grants). */
+    public void addPendingManual(String name, Role role) {
+        String key = "pending." + name.toLowerCase(Locale.ROOT);
+        yaml.set(key + ".email", null);
+        yaml.set(key + ".role", role.name());
+        save();
+    }
+
+    public boolean hasPending(String name) {
+        return yaml.contains("pending." + name.toLowerCase(Locale.ROOT));
+    }
+
     /** Returns and removes the pending link for this name, or null. */
     public Pending takePending(String name) {
         String key = "pending." + name.toLowerCase(Locale.ROOT);
@@ -121,7 +133,7 @@ public final class PlayerDataStore {
                 Role.fromString(yaml.getString(key + ".role")));
         yaml.set(key, null);
         save();
-        return pending.email() == null || pending.role() == null ? null : pending;
+        return pending.role() == null ? null : pending;
     }
 
     public void removePending(String name) {

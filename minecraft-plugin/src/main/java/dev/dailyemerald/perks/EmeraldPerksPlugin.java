@@ -100,11 +100,17 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
                 }, 40L);
     }
 
-    /** Finishes an admin pre-link (/patreon link <name> <email>) on the player's first join. */
+    /** Finishes an admin pre-link (/patreon link or /patreon grant) on the player's first join. */
     private void completePendingLink(Player player) {
         PlayerDataStore.Pending pending = store.takePending(player.getName());
         if (pending == null) return;
-        store.link(player.getUniqueId(), pending.email(), pending.role());
+        if (pending.email() != null) {
+            store.link(player.getUniqueId(), pending.email(), pending.role());
+        } else {
+            // Bulk/manual grant — no Patreon email behind it, so the sync
+            // must never revoke it: mark it manual.
+            store.setRole(player.getUniqueId(), pending.role(), true);
+        }
         player.sendMessage(net.kyori.adventure.text.Component.text(
                         "Your Patreon was linked by an admin — welcome, ",
                         net.kyori.adventure.text.format.NamedTextColor.GREEN)

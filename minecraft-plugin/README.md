@@ -24,7 +24,7 @@ for Java *and* Bedrock/Geyser viewers).
 
 ## Install
 
-1. Drop `EmeraldPerks-1.1.0.jar` into your server's `plugins/` folder and restart.
+1. Drop `EmeraldPerks-1.2.0.jar` into your server's `plugins/` folder and restart.
 2. Open `plugins/EmeraldPerks/config.yml` and paste your Patreon
    **Creator's Access Token** (see below), then restart again
    (the plugin works without it, but only manual grants).
@@ -85,6 +85,7 @@ that understands Floodgate prefixes.
 | `/patreon horn <player>` | admins | Re-give a lost goat horn |
 | `/patreon link <mcname> <email>` | admins/console | Pre-link & whitelist a patron who hasn't joined yet |
 | `/patreon priority <add\|remove\|list> [name]` | admins | Manage the extra priority-join list (non-patrons welcome) |
+| `/patreon grant <board\|journalist> <name> [name]...` | admins/console | Bulk grant by IGN only (e.g. names collected from a Patreon post) — whitelists everyone listed; perks land on first join. Manual grants: remove with `/patreon set <name> none` |
 
 Admins/ops also get `emeraldperks.morph.all` by default, so you can `/morph`
 without a pledge.

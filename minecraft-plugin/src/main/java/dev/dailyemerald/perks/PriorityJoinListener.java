@@ -55,8 +55,8 @@ public final class PriorityJoinListener implements Listener {
     private boolean hasPriority(UUID id, String name) {
         if (store.getRole(id) != null) return true;
         if (store.isPriority(name)) return true;
-        // Admin pre-linked patrons who are joining for the very first time.
-        return store.pendingEmails().containsKey(name.toLowerCase(java.util.Locale.ROOT));
+        // Admin pre-linked/granted patrons joining for the very first time.
+        return store.hasPending(name);
     }
 
     private Player pickVictim() {
