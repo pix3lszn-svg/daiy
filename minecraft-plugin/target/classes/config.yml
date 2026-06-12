@@ -1,0 +1,39 @@
+# ============================================================
+# EmeraldPerks configuration
+# ============================================================
+
+patreon:
+  # REQUIRED for automatic syncing. Create one at:
+  #   https://www.patreon.com/portal/registration/register-clients
+  # -> "Create Client" -> copy the "Creator's Access Token".
+  creator-access-token: ""
+
+  # OPTIONAL but recommended: lets the plugin renew the token by itself
+  # when it expires (roughly monthly). All three come from the same
+  # client page as the token above.
+  client-id: ""
+  client-secret: ""
+  refresh-token: ""
+
+  # Leave blank to auto-detect your campaign.
+  campaign-id: ""
+
+  # How often to re-check who is an active patron.
+  sync-interval-minutes: 10
+
+roles:
+  # Patreon tier names are matched case-insensitively, "contains" style:
+  # a tier called "Board Member ($10)" still matches "board member".
+  board:
+    tier-names:
+      - "board member"
+  journalist:
+    tier-names:
+      - "journalist"
+
+horn:
+  # RANDOM, or one of: PONDER, SING, SEEK, FEEL, ADMIRE, CALL, YEARN, DREAM
+  variant: RANDOM
+
+# When a pledge lapses, take the perks away on the next sync.
+revoke-when-pledge-ends: true
