@@ -9,7 +9,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 import java.util.Locale;
@@ -24,7 +23,7 @@ import java.util.logging.Level;
  */
 public final class PatreonSyncService {
 
-    private final JavaPlugin plugin;
+    private final EmeraldPerksPlugin plugin;
     private final PatreonClient client;
     private final PlayerDataStore store;
     private final MorphManager morphs;
@@ -37,7 +36,7 @@ public final class PatreonSyncService {
     private final Map<String, Role> entitled = new ConcurrentHashMap<>();
     private volatile boolean hasSyncedOnce = false;
 
-    public PatreonSyncService(JavaPlugin plugin, PatreonClient client, PlayerDataStore store,
+    public PatreonSyncService(EmeraldPerksPlugin plugin, PatreonClient client, PlayerDataStore store,
                               MorphManager morphs, HornService horns,
                               List<String> boardPatterns, List<String> journalistPatterns,
                               boolean revokeOnLapse) {
@@ -128,6 +127,28 @@ public final class PatreonSyncService {
                             .append(Component.text(newRole.displayName(), NamedTextColor.GOLD))
                             .append(Component.text("!", NamedTextColor.GREEN)));
                     giveHornIfOwed(online);
+                    plugin.applyRoleSideEffects(online);
+                }
+            }
+            if (newRole == null) {
+                // Lapsed pledge: drop whitelist access too (never for ops/admins).
+                var offline = Bukkit.getOfflinePlayer(id);
+                if (!offline.isOp()) {
+                    plugin.whitelistRemove(offline.getName());
+                }
+            } else if (online == null) {
+                var offline = Bukkit.getOfflinePlayer(id);
+                plugin.whitelistAdd(offline.getName());
+            }
+        }
+
+        // Admin pre-links for players who never joined: drop them (and their
+        // whitelist slot) if the pledge lapsed in the meantime.
+        if (revokeOnLapse) {
+            for (var pending : store.pendingEmails().entrySet()) {
+                if (!entitled.containsKey(pending.getValue())) {
+                    store.removePending(pending.getKey());
+                    plugin.whitelistRemove(pending.getKey());
                 }
             }
         }

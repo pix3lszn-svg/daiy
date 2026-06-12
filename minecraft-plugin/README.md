@@ -8,13 +8,23 @@ Custom Paper 1.21.11 plugin for the DailyEmerald server. It syncs with the
 | **Board Member** | `/morph <mob>` into **any mob except the ender dragon**, + a goat horn |
 | **Journalist** | `/morph villager`, + a goat horn |
 
+Both tiers also get (each toggleable in `config.yml`):
+
+- **Auto-whitelisting** — patrons are added to the server whitelist when they
+  gain their role and removed when their pledge lapses (ops/admins never).
+- **Adventure mode** — patrons are put into adventure mode on join
+  (ops/admins exempt).
+- **Priority join** — when the server is full, a connecting patron bumps a
+  random non-priority player off to take their slot. Ops, admins, patrons,
+  and anyone on the manual priority list are never the one bumped.
+
 No other plugins required — morphing is built in (the player turns invisible
 and a real, AI-less, invulnerable mob mirrors them every tick, so it renders
 for Java *and* Bedrock/Geyser viewers).
 
 ## Install
 
-1. Drop `EmeraldPerks-1.0.0.jar` into your server's `plugins/` folder and restart.
+1. Drop `EmeraldPerks-1.1.0.jar` into your server's `plugins/` folder and restart.
 2. Open `plugins/EmeraldPerks/config.yml` and paste your Patreon
    **Creator's Access Token** (see below), then restart again
    (the plugin works without it, but only manual grants).
@@ -48,6 +58,19 @@ Board Member or Journalist pledge, the perks unlock instantly and the goat
 horn is handed over. Pledges are re-checked every 10 minutes — lapsed
 patrons lose perks automatically, new patrons show up within a sync cycle.
 
+**If your whitelist is ON**, new patrons can't join to link themselves.
+Have them send you their Minecraft name + Patreon email, then run (in-game
+as admin, or from console):
+
+```
+/patreon link TheirMcName their-patreon-email@example.com
+```
+
+This verifies the pledge, whitelists them, and unlocks their perks the first
+time they join. Note: vanilla whitelisting works by Java account name —
+Bedrock players joining through Geyser/Floodgate may need a whitelist plugin
+that understands Floodgate prefixes.
+
 ## Commands
 
 | Command | Who | What |
@@ -60,6 +83,8 @@ patrons lose perks automatically, new patrons show up within a sync cycle.
 | `/patreon sync` | admins | Pull the patron list right now |
 | `/patreon set <player> <board\|journalist\|none>` | admins | Manual grant/revoke (sync won't touch it) |
 | `/patreon horn <player>` | admins | Re-give a lost goat horn |
+| `/patreon link <mcname> <email>` | admins/console | Pre-link & whitelist a patron who hasn't joined yet |
+| `/patreon priority <add\|remove\|list> [name]` | admins | Manage the extra priority-join list (non-patrons welcome) |
 
 Admins/ops also get `emeraldperks.morph.all` by default, so you can `/morph`
 without a pledge.

@@ -1,5 +1,5 @@
 name: EmeraldPerks
-version: "1.0.0"
+version: "1.1.0"
 main: dev.dailyemerald.perks.EmeraldPerksPlugin
 api-version: "1.21"
 description: Patreon-powered perks - patron morphing and goat horns for DailyEmerald.
@@ -24,3 +24,6 @@ permissions:
   emeraldperks.morph.all:
     description: Morph into any allowed mob regardless of Patreon role.
     default: op
+  emeraldperks.priority:
+    description: Never gets kicked to make room for a priority join.
+    default: false

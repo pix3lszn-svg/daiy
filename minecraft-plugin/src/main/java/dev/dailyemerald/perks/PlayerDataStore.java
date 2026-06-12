@@ -93,6 +93,88 @@ public final class PlayerDataStore {
         return ids;
     }
 
+    // ------------------------------------------------------------------
+    // Pending links: admin pre-linked a Minecraft name that hasn't joined
+    // yet (so there's no UUID to attach the role to).
+    //
+    // pending:
+    //   <lowercase name>:
+    //     email: patron@example.com
+    //     role: BOARD
+    // ------------------------------------------------------------------
+
+    public record Pending(String email, Role role) {}
+
+    public void addPending(String name, String email, Role role) {
+        String key = "pending." + name.toLowerCase(Locale.ROOT);
+        yaml.set(key + ".email", email.toLowerCase(Locale.ROOT));
+        yaml.set(key + ".role", role.name());
+        save();
+    }
+
+    /** Returns and removes the pending link for this name, or null. */
+    public Pending takePending(String name) {
+        String key = "pending." + name.toLowerCase(Locale.ROOT);
+        if (!yaml.contains(key)) return null;
+        Pending pending = new Pending(
+                yaml.getString(key + ".email"),
+                Role.fromString(yaml.getString(key + ".role")));
+        yaml.set(key, null);
+        save();
+        return pending.email() == null || pending.role() == null ? null : pending;
+    }
+
+    public void removePending(String name) {
+        yaml.set("pending." + name.toLowerCase(Locale.ROOT), null);
+        save();
+    }
+
+    /** Lowercase name -> email for every pending link. */
+    public java.util.Map<String, String> pendingEmails() {
+        java.util.Map<String, String> result = new java.util.HashMap<>();
+        var section = yaml.getConfigurationSection("pending");
+        if (section != null) {
+            for (String name : section.getKeys(false)) {
+                String email = yaml.getString("pending." + name + ".email");
+                if (email != null) result.put(name, email);
+            }
+        }
+        return result;
+    }
+
+    // ------------------------------------------------------------------
+    // Manual priority list: extra people (by name) who get priority join
+    // even without a Patreon role.
+    // ------------------------------------------------------------------
+
+    public boolean isPriority(String name) {
+        return yaml.getStringList("priority").contains(name.toLowerCase(Locale.ROOT));
+    }
+
+    public void addPriority(String name) {
+        var list = new java.util.ArrayList<>(yaml.getStringList("priority"));
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (!list.contains(lower)) {
+            list.add(lower);
+            yaml.set("priority", list);
+            save();
+        }
+    }
+
+    public boolean removePriority(String name) {
+        var list = new java.util.ArrayList<>(yaml.getStringList("priority"));
+        boolean removed = list.remove(name.toLowerCase(Locale.ROOT));
+        if (removed) {
+            yaml.set("priority", list);
+            save();
+        }
+        return removed;
+    }
+
+    public java.util.List<String> priorityNames() {
+        return yaml.getStringList("priority");
+    }
+
     public synchronized void save() {
         try {
             yaml.save(file);

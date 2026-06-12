@@ -35,5 +35,21 @@ horn:
   # RANDOM, or one of: PONDER, SING, SEEK, FEEL, ADMIRE, CALL, YEARN, DREAM
   variant: RANDOM
 
+whitelist:
+  # Add patrons to the server whitelist when they gain a role, and remove
+  # them when their pledge lapses. (Ops/admins are never removed.)
+  auto-manage: true
+
+adventure:
+  # Put patrons into adventure mode when they join. Ops/admins are exempt.
+  force-for-patrons: true
+
+priority:
+  # When the server is full and a patron (or someone added with
+  # /patreon priority add) connects, kick a random non-priority player
+  # to make room. Ops, admins, patrons and priority-listed players are
+  # never the one kicked.
+  enabled: true
+
 # When a pledge lapses, take the perks away on the next sync.
 revoke-when-pledge-ends: true

@@ -63,6 +63,7 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
         getCommand("unmorph").setExecutor(morphCommand);
 
         Bukkit.getPluginManager().registerEvents(new MorphListeners(morphManager), this);
+        Bukkit.getPluginManager().registerEvents(new PriorityJoinListener(this, store), this);
         Bukkit.getPluginManager().registerEvents(this, this);
 
         morphManager.start();
@@ -87,12 +88,30 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        // Hand over the goat horn to patrons who earned it while offline.
+        // Delayed so we run after Essentials & co. restore gamemodes, and so
+        // perks earned while offline (horn, pending links) land reliably.
         Bukkit.getScheduler().runTaskLater(this,
                 () -> {
                     Player player = event.getPlayer();
-                    if (player.isOnline()) syncService.giveHornIfOwed(player);
+                    if (!player.isOnline()) return;
+                    completePendingLink(player);
+                    syncService.giveHornIfOwed(player);
+                    applyAdventureIfPatron(player);
                 }, 40L);
+    }
+
+    /** Finishes an admin pre-link (/patreon link <name> <email>) on the player's first join. */
+    private void completePendingLink(Player player) {
+        PlayerDataStore.Pending pending = store.takePending(player.getName());
+        if (pending == null) return;
+        store.link(player.getUniqueId(), pending.email(), pending.role());
+        player.sendMessage(net.kyori.adventure.text.Component.text(
+                        "Your Patreon was linked by an admin — welcome, ",
+                        net.kyori.adventure.text.format.NamedTextColor.GREEN)
+                .append(net.kyori.adventure.text.Component.text(pending.role().displayName(),
+                        net.kyori.adventure.text.format.NamedTextColor.GOLD))
+                .append(net.kyori.adventure.text.Component.text("!",
+                        net.kyori.adventure.text.format.NamedTextColor.GREEN)));
     }
 
     /** The player's current perk role (null = no perks). */
@@ -102,6 +121,44 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
 
     public MorphManager morphManager() {
         return morphManager;
+    }
+
+    // ------------------------------------------------------------------
+    // Whitelist + adventure-mode side effects of holding a patron role.
+    // ------------------------------------------------------------------
+
+    /** Valid Java and Floodgate/Bedrock-prefixed usernames; guards console dispatch. */
+    private static final java.util.regex.Pattern SAFE_NAME =
+            java.util.regex.Pattern.compile("^[\\w.*+-]{1,32}$");
+
+    public boolean manageWhitelist() {
+        return getConfig().getBoolean("whitelist.auto-manage", true);
+    }
+
+    public void whitelistAdd(String name) {
+        if (!manageWhitelist() || name == null || !SAFE_NAME.matcher(name).matches()) return;
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + name);
+    }
+
+    public void whitelistRemove(String name) {
+        if (!manageWhitelist() || name == null || !SAFE_NAME.matcher(name).matches()) return;
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist remove " + name);
+    }
+
+    /** Puts patrons (never admins/ops) into adventure mode when enabled. */
+    public void applyAdventureIfPatron(Player player) {
+        if (!getConfig().getBoolean("adventure.force-for-patrons", true)) return;
+        if (player.isOp() || player.hasPermission("emeraldperks.admin")) return;
+        if (store.getRole(player.getUniqueId()) != null
+                && player.getGameMode() != org.bukkit.GameMode.ADVENTURE) {
+            player.setGameMode(org.bukkit.GameMode.ADVENTURE);
+        }
+    }
+
+    /** Everything that should happen when an online player gains a role. */
+    public void applyRoleSideEffects(Player player) {
+        whitelistAdd(player.getName());
+        applyAdventureIfPatron(player);
     }
 
     // ------------------------------------------------------------------

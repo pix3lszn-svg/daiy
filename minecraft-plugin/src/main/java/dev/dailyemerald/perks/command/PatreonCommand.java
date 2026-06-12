@@ -46,14 +46,23 @@ public final class PatreonCommand implements TabExecutor {
             case "horn" -> {
                 if (requireAdmin(sender)) horn(sender, args);
             }
+            case "priority" -> {
+                if (requireAdmin(sender)) priority(sender, args);
+            }
             default -> help(sender);
         }
         return true;
     }
 
     private void link(CommandSender sender, String[] args) {
+        // Admin form: /patreon link <mcname> <email> — pre-link + whitelist a
+        // patron who has never joined (needed when the whitelist is on).
+        if (args.length == 3) {
+            if (requireAdmin(sender)) adminLink(sender, args[1], args[2]);
+            return;
+        }
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Component.text("Only players can link.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Console usage: /patreon link <mcname> <email>", NamedTextColor.RED));
             return;
         }
         if (args.length != 2 || !args[1].contains("@")) {
@@ -85,6 +94,45 @@ public final class PatreonCommand implements TabExecutor {
                 .append(Component.text(role.displayName(), NamedTextColor.GOLD))
                 .append(Component.text(" — try /morph!", NamedTextColor.GREEN)));
         sync.giveHornIfOwed(player);
+        plugin.applyRoleSideEffects(player);
+    }
+
+    private void adminLink(CommandSender sender, String name, String email) {
+        if (!email.contains("@")) {
+            sender.sendMessage(Component.text("Usage: /patreon link <mcname> <patreon-email>", NamedTextColor.YELLOW));
+            return;
+        }
+        if (!sync.isConfigured() || !sync.hasSyncedOnce()) {
+            sender.sendMessage(Component.text(
+                    "Patron list not loaded yet — configure the token and/or run /patreon sync first.",
+                    NamedTextColor.RED));
+            sync.sync(null);
+            return;
+        }
+        Role role = sync.entitledRole(email.toLowerCase(Locale.ROOT));
+        if (role == null) {
+            sender.sendMessage(Component.text(
+                    "No active Board Member or Journalist pledge for that email.", NamedTextColor.RED));
+            return;
+        }
+        Player online = Bukkit.getPlayerExact(name);
+        if (online != null) {
+            store.link(online.getUniqueId(), email, role);
+            online.sendMessage(Component.text("An admin linked your Patreon — you are a ", NamedTextColor.GREEN)
+                    .append(Component.text(role.displayName(), NamedTextColor.GOLD))
+                    .append(Component.text("!", NamedTextColor.GREEN)));
+            sync.giveHornIfOwed(online);
+            plugin.applyRoleSideEffects(online);
+            sender.sendMessage(Component.text("Linked " + online.getName() + " as " + role.displayName() + ".",
+                    NamedTextColor.GREEN));
+            return;
+        }
+        store.addPending(name, email, role);
+        plugin.whitelistAdd(name);
+        sender.sendMessage(Component.text("Pre-linked " + name + " as " + role.displayName()
+                        + (plugin.manageWhitelist() ? " and added them to the whitelist." : ".")
+                        + " Their perks unlock when they first join.",
+                NamedTextColor.GREEN));
     }
 
     private void unlink(CommandSender sender) {
@@ -135,6 +183,9 @@ public final class PatreonCommand implements TabExecutor {
         if (args[2].equalsIgnoreCase("none")) {
             plugin.morphManager().unmorph(target, true);
             store.unlink(target.getUniqueId());
+            if (!target.isOp() && !target.hasPermission(ADMIN_PERM)) {
+                plugin.whitelistRemove(target.getName());
+            }
             sender.sendMessage(Component.text("Cleared perks for " + target.getName() + ".", NamedTextColor.GREEN));
             return;
         }
@@ -145,6 +196,7 @@ public final class PatreonCommand implements TabExecutor {
         }
         store.setRole(target.getUniqueId(), role, true);
         plugin.morphManager().unmorphIfNoLongerAllowed(target, role);
+        plugin.applyRoleSideEffects(target);
         sender.sendMessage(Component.text("Set " + target.getName() + " to " + role.displayName()
                 + " (manual — Patreon sync won't change it).", NamedTextColor.GREEN));
         target.sendMessage(Component.text("You were granted the ", NamedTextColor.GREEN)
@@ -174,6 +226,41 @@ public final class PatreonCommand implements TabExecutor {
         }
     }
 
+    private void priority(CommandSender sender, String[] args) {
+        if (args.length == 2 && args[1].equalsIgnoreCase("list")) {
+            var names = store.priorityNames();
+            sender.sendMessage(Component.text("Manual priority list (" + names.size() + "): "
+                    + String.join(", ", names), NamedTextColor.GREEN));
+            sender.sendMessage(Component.text("(All active patrons get priority automatically.)",
+                    NamedTextColor.GRAY));
+            return;
+        }
+        if (args.length != 3) {
+            sender.sendMessage(Component.text("Usage: /patreon priority <add|remove|list> [player]",
+                    NamedTextColor.YELLOW));
+            return;
+        }
+        String name = args[2];
+        switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "add" -> {
+                store.addPriority(name);
+                sender.sendMessage(Component.text(name + " now gets priority when the server is full.",
+                        NamedTextColor.GREEN));
+            }
+            case "remove" -> {
+                if (store.removePriority(name)) {
+                    sender.sendMessage(Component.text("Removed " + name + " from the priority list.",
+                            NamedTextColor.GREEN));
+                } else {
+                    sender.sendMessage(Component.text(name + " wasn't on the priority list.",
+                            NamedTextColor.YELLOW));
+                }
+            }
+            default -> sender.sendMessage(Component.text("Usage: /patreon priority <add|remove|list> [player]",
+                    NamedTextColor.YELLOW));
+        }
+    }
+
     private void help(CommandSender sender) {
         sender.sendMessage(Component.text("— EmeraldPerks —", NamedTextColor.GOLD));
         sender.sendMessage(Component.text("/patreon link <email> — claim your patron perks", NamedTextColor.YELLOW));
@@ -184,6 +271,9 @@ public final class PatreonCommand implements TabExecutor {
             sender.sendMessage(Component.text("/patreon sync — pull the patron list now", NamedTextColor.GRAY));
             sender.sendMessage(Component.text("/patreon set <player> <board|journalist|none>", NamedTextColor.GRAY));
             sender.sendMessage(Component.text("/patreon horn <player> — re-give a lost horn", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/patreon link <mcname> <email> — pre-link & whitelist a patron",
+                    NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/patreon priority <add|remove|list> [player]", NamedTextColor.GRAY));
         }
     }
 
@@ -204,9 +294,13 @@ public final class PatreonCommand implements TabExecutor {
         if (args.length == 1) {
             List<String> subs = new java.util.ArrayList<>(List.of("link", "unlink", "status"));
             if (sender.hasPermission(ADMIN_PERM)) {
-                subs.addAll(List.of("sync", "set", "horn"));
+                subs.addAll(List.of("sync", "set", "horn", "priority"));
             }
             return subs.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("priority")) {
+            return List.of("add", "remove", "list").stream()
+                    .filter(s -> s.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
             return List.of("board", "journalist", "none");
