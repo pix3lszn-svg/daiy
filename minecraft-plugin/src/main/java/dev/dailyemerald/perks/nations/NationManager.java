@@ -1,8 +1,12 @@
 package dev.dailyemerald.perks.nations;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -14,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.logging.Level;
@@ -37,6 +42,21 @@ public final class NationManager {
     public static final String TAG_PREFIX = "nation_";
     public static final String SQUAD_PREFIX = "squad_";
     private static final Pattern VALID_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
+
+    /** Per-nation leather tunic colours (RGB), worn on /nation join. */
+    private static final Map<String, Integer> TUNIC_COLORS = Map.ofEntries(
+            Map.entry("plains", 16105752),
+            Map.entry("forest", 2976335),
+            Map.entry("darkforest", 4857690),
+            Map.entry("desert", 14711609),
+            Map.entry("jungle", 5754884),
+            Map.entry("mesa", 12597547),
+            Map.entry("snow", 11067626),
+            Map.entry("swamp", 3051386),
+            Map.entry("savanna", 13930522),
+            Map.entry("taiga", 3825546),
+            Map.entry("mushroom", 12720219),
+            Map.entry("cherry", 16027569));
 
     public record DrawResult(List<String> squad, int reservedCount, int randomCount,
                              List<String> offlineMembers, int eligibleOnline) {}
@@ -126,6 +146,21 @@ public final class NationManager {
         clearNation(player);
         player.addScoreboardTag(TAG_PREFIX + canonicalNation);
         getOrCreateTeam(canonicalNation).addEntry(player.getName());
+        giveTunic(player, canonicalNation);
+    }
+
+    /** Gives the player their nation's coloured leather tunic (into the inventory). */
+    private void giveTunic(Player player, String canonicalNation) {
+        Integer rgb = TUNIC_COLORS.get(canonicalNation.toLowerCase(Locale.ROOT));
+        if (rgb == null) return;
+        ItemStack tunic = new ItemStack(Material.LEATHER_CHESTPLATE);
+        LeatherArmorMeta meta = (LeatherArmorMeta) tunic.getItemMeta();
+        meta.setColor(Color.fromRGB(rgb));
+        tunic.setItemMeta(meta);
+        // Drop at their feet if the inventory is full, rather than losing it.
+        for (ItemStack leftover : player.getInventory().addItem(tunic).values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+        }
     }
 
     public boolean leave(Player player) {
