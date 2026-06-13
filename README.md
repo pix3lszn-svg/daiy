@@ -7,6 +7,7 @@ Everything needed to take payments on a Paper/Spigot Minecraft server with
 | --- | --- |
 | [`store/`](store/) | Custom webstore (React + Vite) built on the [Tebex Headless API](https://docs.tebex.io/developers/headless-api/overview) — players browse packages, build a basket, and check out on Tebex's hosted, PCI-compliant checkout page. |
 | [`webhook/`](webhook/) | Node.js service that receives Tebex webhooks (purchases, refunds, chargebacks) with signature + IP verification, and can announce purchases to Discord. |
+| [`discord-bot/`](discord-bot/) | Discord bot that drafts members into one of the 12 Overworld Cup nations with a button — assigns a random nation role, recolours their name, and unlocks their nation's private channel. Colours match the Minecraft plugin. |
 | [`docs/minecraft-server-setup.md`](docs/minecraft-server-setup.md) | Guide for installing the Tebex plugin on the Paper/Spigot server so purchases get delivered in game. |
 
 ## Setup order
