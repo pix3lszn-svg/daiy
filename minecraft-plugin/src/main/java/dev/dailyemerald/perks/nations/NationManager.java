@@ -135,15 +135,43 @@ public final class NationManager {
     }
 
     private void clearNation(Player player) {
+        // Strip EVERY nation_ and squad_ tag (not just matched pairs), drop any
+        // nation scoreboard-team entry, and remove them from all stored squads.
         for (String tag : new HashSet<>(player.getScoreboardTags())) {
             if (tag.startsWith(TAG_PREFIX)) {
-                String nation = tag.substring(TAG_PREFIX.length());
                 player.removeScoreboardTag(tag);
-                player.removeScoreboardTag(SQUAD_PREFIX + nation);
-                Team team = scoreboard().getTeam(nation);
+                Team team = scoreboard().getTeam(tag.substring(TAG_PREFIX.length()));
                 if (team != null) team.removeEntry(player.getName());
+            } else if (tag.startsWith(SQUAD_PREFIX)) {
+                player.removeScoreboardTag(tag);
             }
         }
+        dropFromSquadRosters(player.getName(), null);
+    }
+
+    /** Remove every squad_ scoreboard tag from a player except optionally one nation's. */
+    private void stripSquadTags(Player player, String keepNation) {
+        String keep = keepNation == null ? null : SQUAD_PREFIX + keepNation;
+        for (String tag : new HashSet<>(player.getScoreboardTags())) {
+            if (tag.startsWith(SQUAD_PREFIX) && !tag.equals(keep)) {
+                player.removeScoreboardTag(tag);
+            }
+        }
+    }
+
+    /** Remove a player from every stored squad roster except (optionally) one nation's. */
+    private void dropFromSquadRosters(String playerName, String keepNation) {
+        boolean changed = false;
+        for (String nation : available()) {
+            if (keepNation != null && nation.equalsIgnoreCase(keepNation)) continue;
+            String path = "squad." + nation.toLowerCase(Locale.ROOT);
+            List<String> roster = yaml.getStringList(path);
+            if (roster.removeIf(n -> n.equalsIgnoreCase(playerName))) {
+                yaml.set(path, roster);
+                changed = true;
+            }
+        }
+        if (changed) save();
     }
 
     // ---- reserved players --------------------------------------------------
@@ -246,10 +274,13 @@ public final class NationManager {
                 if (p != null) p.removeScoreboardTag(SQUAD_PREFIX + nation);
             }
         }
-        // Tag the chosen players (and make sure they're in the nation too).
+        // Tag the chosen players. Each can only be in ONE squad, so first drop
+        // them from every other nation's roster and strip any other squad tag.
         for (String name : current) {
+            dropFromSquadRosters(name, nation);
             Player p = Bukkit.getPlayerExact(name);
             if (p != null) {
+                stripSquadTags(p, nation);
                 p.addScoreboardTag(SQUAD_PREFIX + nation);
                 p.addScoreboardTag(TAG_PREFIX + nation);
                 getOrCreateTeam(nation).addEntry(p.getName());
@@ -263,16 +294,20 @@ public final class NationManager {
      */
     public void reconcileSquadTags(Player player) {
         String name = player.getName();
+        // Find the one roster they belong to (rosters are kept mutually exclusive).
+        String inNation = null;
         for (String nation : available()) {
-            boolean inSquad = squadFor(nation).stream().anyMatch(s -> s.equalsIgnoreCase(name));
-            boolean hasTag = player.getScoreboardTags().contains(SQUAD_PREFIX + nation);
-            if (inSquad && !hasTag) {
-                player.addScoreboardTag(SQUAD_PREFIX + nation);
-                player.addScoreboardTag(TAG_PREFIX + nation);
-                getOrCreateTeam(nation).addEntry(player.getName());
-            } else if (!inSquad && hasTag) {
-                player.removeScoreboardTag(SQUAD_PREFIX + nation);
+            if (squadFor(nation).stream().anyMatch(s -> s.equalsIgnoreCase(name))) {
+                inNation = nation;
+                break;
             }
+        }
+        // Strip any squad tag that doesn't match, then ensure the right one is set.
+        stripSquadTags(player, inNation);
+        if (inNation != null && !player.getScoreboardTags().contains(SQUAD_PREFIX + inNation)) {
+            player.addScoreboardTag(SQUAD_PREFIX + inNation);
+            player.addScoreboardTag(TAG_PREFIX + inNation);
+            getOrCreateTeam(inNation).addEntry(player.getName());
         }
     }
 

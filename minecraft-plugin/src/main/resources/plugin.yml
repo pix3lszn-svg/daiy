@@ -1,5 +1,5 @@
 name: EmeraldPerks
-version: "1.5.0"
+version: "1.6.0"
 main: dev.dailyemerald.perks.EmeraldPerksPlugin
 api-version: "1.21"
 description: Patreon-powered perks - patron morphing and goat horns for DailyEmerald.
