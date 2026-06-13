@@ -254,6 +254,36 @@ public final class NationManager {
                 offline, fillCandidates.size());
     }
 
+    /**
+     * Clean slate: strips every nation_/squad_ tag from all online players and
+     * empties every stored squad roster. Keeps the nation list and reserved
+     * lists intact. Returns how many online players were affected.
+     */
+    public int resetAll() {
+        Scoreboard board = scoreboard();
+        int affected = 0;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            boolean had = false;
+            for (String tag : new HashSet<>(online.getScoreboardTags())) {
+                if (tag.startsWith(TAG_PREFIX)) {
+                    online.removeScoreboardTag(tag);
+                    Team team = board.getTeam(tag.substring(TAG_PREFIX.length()));
+                    if (team != null) team.removeEntry(online.getName());
+                    had = true;
+                } else if (tag.startsWith(SQUAD_PREFIX)) {
+                    online.removeScoreboardTag(tag);
+                    had = true;
+                }
+            }
+            if (had) affected++;
+        }
+        for (String nation : available()) {
+            yaml.set("squad." + nation.toLowerCase(Locale.ROOT), null);
+        }
+        save();
+        return affected;
+    }
+
     public boolean clearSquad(String canonicalNation) {
         List<String> previous = squadFor(canonicalNation);
         if (previous.isEmpty()) return false;

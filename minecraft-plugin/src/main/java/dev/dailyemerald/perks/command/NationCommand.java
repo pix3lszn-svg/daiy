@@ -53,6 +53,9 @@ public final class NationCommand implements TabExecutor {
             case "cleardraw" -> {
                 if (requireAdmin(sender)) clearDraw(sender, args);
             }
+            case "reset" -> {
+                if (requireAdmin(sender)) reset(sender);
+            }
             case "squad" -> squad(sender, args);
             default -> status(sender, label);
         }
@@ -248,6 +251,15 @@ public final class NationCommand implements TabExecutor {
                 .append(Component.text(String.join(", ", squad), NamedTextColor.GOLD)));
     }
 
+    private void reset(CommandSender sender) {
+        int n = nations.resetAll();
+        sender.sendMessage(Component.text("Nations reset: cleared all nation/squad tags from " + n
+                + " online player(s) and emptied every stored squad. Your nations and reserved "
+                + "lists were kept.", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("Players should now /nation join one nation, then you /nation draw.",
+                NamedTextColor.GRAY));
+    }
+
     private void status(CommandSender sender, String label) {
         sender.sendMessage(Component.text("— Nations —", NamedTextColor.GOLD));
         sender.sendMessage(Component.text("/" + label + " list — see the nations you can join",
@@ -266,6 +278,8 @@ public final class NationCommand implements TabExecutor {
             sender.sendMessage(Component.text("/" + label + " draw <nation> — pick the ≤"
                     + nations.squadSize() + " squad (admin)", NamedTextColor.GRAY));
             sender.sendMessage(Component.text("/" + label + " cleardraw <nation> — empty the squad (admin)",
+                    NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/" + label + " reset — wipe ALL tags & squads, clean slate (admin)",
                     NamedTextColor.GRAY));
         }
         if (sender instanceof Player player) {
@@ -288,7 +302,7 @@ public final class NationCommand implements TabExecutor {
         if (args.length == 1) {
             List<String> subs = new ArrayList<>(List.of("join", "leave", "list", "squad"));
             if (sender.hasPermission(ADMIN_PERM)) {
-                subs.addAll(List.of("create", "delete", "reserve", "unreserve", "draw", "cleardraw"));
+                subs.addAll(List.of("create", "delete", "reserve", "unreserve", "draw", "cleardraw", "reset"));
             }
             return subs.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }
