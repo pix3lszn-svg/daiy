@@ -81,6 +81,24 @@ that understands Floodgate prefixes.
 | `/morph <mob>` / `/morph off` | patrons | Morph (tab-complete lists your options) |
 | `/unmorph` | patrons | Change back |
 | `/morphview` (or `/morph view`) | patrons | Toggle seeing your own morph — hide it so it stops blocking your own clicks/aim |
+| `/nation list` | everyone | See the nations you can join |
+| `/nation join <name>` | everyone | Sign up for a nation (or switch) — works in adventure mode |
+| `/nation leave` | everyone | Leave your nation (the "cancel") |
+| `/nation create <name>` / `/nation delete <name>` | admins | Add or remove a nation |
+
+### Nations / team sign-up
+
+A self-serve team system that works in **adventure mode** (no command blocks).
+`/nation join cherry` adds the scoreboard tag `nation_cherry` *and* joins the
+scoreboard team `cherry`, so it's compatible with a datapack that selects by
+either `tag=nation_cherry` or `team=cherry`. If a team of that name already
+exists (e.g. made by your datapack with a colour), the plugin reuses it.
+
+Players freely switch nations by joining a different one, or `/nation leave` to
+drop out. Available nations are seeded with `cherry` and managed by admins via
+`/nation create` / `/nation delete` (stored in `nations.yml`). Membership lives
+on the player's scoreboard tags, so it persists across restarts and is readable
+by your datapack. Set `nations.enabled: false` in config.yml to turn it off.
 | `/patreon sync` | admins | Pull the patron list right now |
 | `/patreon set <player> <board\|journalist\|none>` | admins | Manual grant/revoke (sync won't touch it) |
 | `/patreon horn <player>` | admins | Re-give a lost goat horn |

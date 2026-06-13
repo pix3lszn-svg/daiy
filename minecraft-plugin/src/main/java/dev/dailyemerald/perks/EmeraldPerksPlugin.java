@@ -63,6 +63,13 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
         getCommand("unmorph").setExecutor(morphCommand);
         getCommand("morphview").setExecutor(morphCommand);
 
+        dev.dailyemerald.perks.nations.NationManager nations =
+                new dev.dailyemerald.perks.nations.NationManager(this, config.getBoolean("nations.enabled", true));
+        dev.dailyemerald.perks.command.NationCommand nationCommand =
+                new dev.dailyemerald.perks.command.NationCommand(nations);
+        getCommand("nation").setExecutor(nationCommand);
+        getCommand("nation").setTabCompleter(nationCommand);
+
         Bukkit.getPluginManager().registerEvents(new MorphListeners(morphManager), this);
         Bukkit.getPluginManager().registerEvents(new PriorityJoinListener(this, store), this);
         Bukkit.getPluginManager().registerEvents(this, this);

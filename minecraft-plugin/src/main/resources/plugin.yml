@@ -1,5 +1,5 @@
 name: EmeraldPerks
-version: "1.3.0"
+version: "1.4.0"
 main: dev.dailyemerald.perks.EmeraldPerksPlugin
 api-version: "1.21"
 description: Patreon-powered perks - patron morphing and goat horns for DailyEmerald.
@@ -19,6 +19,10 @@ commands:
   morphview:
     description: Toggle whether you see your own morph (so it doesn't block your aim).
     usage: /morphview
+  nation:
+    description: Sign up for a nation/team (works in adventure mode).
+    usage: /nation <join|leave|list>
+    aliases: [nations]
 
 permissions:
   emeraldperks.admin:
@@ -30,3 +34,6 @@ permissions:
   emeraldperks.priority:
     description: Never gets kicked to make room for a priority join.
     default: false
+  emeraldperks.nation.admin:
+    description: Create and delete nations (/nation create, /nation delete).
+    default: op

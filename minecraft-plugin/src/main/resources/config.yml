@@ -51,5 +51,14 @@ priority:
   # never the one kicked.
   enabled: true
 
+nations:
+  # Self-serve team/nation sign-up that works in adventure mode (no command
+  # blocks needed). Players: /nation join <name>, /nation leave, /nation list.
+  # Admins: /nation create <name>, /nation delete <name>.
+  # Joining adds the scoreboard tag "nation_<name>" (matches a datapack that
+  # selects with tag=nation_<name>) AND joins the scoreboard team "<name>".
+  # The list of available nations lives in nations.yml.
+  enabled: true
+
 # When a pledge lapses, take the perks away on the next sync.
 revoke-when-pledge-ends: true
