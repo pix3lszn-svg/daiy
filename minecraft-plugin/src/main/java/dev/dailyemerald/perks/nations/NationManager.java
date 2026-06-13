@@ -10,6 +10,8 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 
 import java.io.File;
 import java.io.IOException;
@@ -379,7 +381,12 @@ public final class NationManager {
     private Team getOrCreateTeam(String nation) {
         Scoreboard board = scoreboard();
         Team team = board.getTeam(nation);
-        return team != null ? team : board.registerNewTeam(nation);
+        if (team == null) team = board.registerNewTeam(nation);
+        // Colour the name tag to match the jersey. Name tags only support the
+        // 16 preset colours, so we snap the jersey RGB to the nearest one.
+        Integer rgb = TUNIC_COLORS.get(nation.toLowerCase(Locale.ROOT));
+        if (rgb != null) team.color(NamedTextColor.nearestTo(TextColor.color(rgb)));
+        return team;
     }
 
     private Scoreboard scoreboard() {
