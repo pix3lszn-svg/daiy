@@ -80,6 +80,7 @@ that understands Floodgate prefixes.
 | `/patreon unlink` | everyone | Disconnect your Patreon |
 | `/morph <mob>` / `/morph off` | patrons | Morph (tab-complete lists your options) |
 | `/unmorph` | patrons | Change back |
+| `/morphview` (or `/morph view`) | patrons | Toggle seeing your own morph — hide it so it stops blocking your own clicks/aim |
 | `/patreon sync` | admins | Pull the patron list right now |
 | `/patreon set <player> <board\|journalist\|none>` | admins | Manual grant/revoke (sync won't touch it) |
 | `/patreon horn <player>` | admins | Re-give a lost goat horn |
@@ -95,6 +96,10 @@ without a pledge.
 - While morphed you're invisible with a mob mirroring you — but **worn armor
   and held items still render** (a vanilla quirk of invisibility). Patrons who
   want the clean look should stow their armor.
+- The follower-mob sits on top of you, so it can intercept your own clicks/aim.
+  Run **`/morphview`** to hide the mob from your own screen (others still see
+  it) and your attacks pass through normally. One remaining edge case: your own
+  arrows can still clip a very large mob's body (ghast, ravager).
 - Morphs drop on death, world change, and relog (just `/morph` again).
 - The morph is visual + name tag; you keep your own hitbox, health, and abilities
   (no creeper explosions, no ghast fireballs).

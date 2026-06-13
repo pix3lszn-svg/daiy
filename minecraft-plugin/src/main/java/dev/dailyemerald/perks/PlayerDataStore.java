@@ -69,6 +69,16 @@ public final class PlayerDataStore {
         return yaml.getBoolean(path(id, "manual"), false);
     }
 
+    /** True if the player has chosen to hide their own morph mob from their view. */
+    public boolean isMorphSelfHidden(UUID id) {
+        return yaml.getBoolean(path(id, "morph-self-hidden"), false);
+    }
+
+    public void setMorphSelfHidden(UUID id, boolean hidden) {
+        yaml.set(path(id, "morph-self-hidden"), hidden);
+        save();
+    }
+
     public boolean isHornGiven(UUID id) {
         return yaml.getBoolean(path(id, "horn-given"), false);
     }

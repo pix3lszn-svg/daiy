@@ -35,6 +35,21 @@ public final class MorphCommand implements TabExecutor {
             return true;
         }
 
+        if (command.getName().equalsIgnoreCase("morphview")
+                || (args.length > 0 && args[0].equalsIgnoreCase("view"))) {
+            boolean hidden = morphs.toggleSelfView(player);
+            if (hidden) {
+                player.sendMessage(Component.text(
+                        "Your morph is now hidden from your own view — others still see it, and it "
+                                + "won't get in the way of your clicks or aim anymore.", NamedTextColor.GREEN));
+            } else {
+                player.sendMessage(Component.text(
+                        "You can see your own morph again. Run /morphview to hide it if it blocks your aim.",
+                        NamedTextColor.GREEN));
+            }
+            return true;
+        }
+
         if (command.getName().equalsIgnoreCase("unmorph")
                 || (args.length > 0 && args[0].equalsIgnoreCase("off"))) {
             if (morphs.isMorphed(player)) {
@@ -101,6 +116,7 @@ public final class MorphCommand implements TabExecutor {
         String prefix = args[0].toLowerCase(Locale.ROOT);
         List<String> options = new ArrayList<>();
         options.add("off");
+        options.add("view");
         for (EntityType type : allowedFor(player)) {
             options.add(type.name().toLowerCase(Locale.ROOT));
         }

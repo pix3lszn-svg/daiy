@@ -1,5 +1,6 @@
 package dev.dailyemerald.perks.morph;
 
+import dev.dailyemerald.perks.PlayerDataStore;
 import dev.dailyemerald.perks.Role;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -39,13 +40,15 @@ public final class MorphManager {
     private static final Set<EntityType> BOARD_TYPES = buildBoardTypes();
 
     private final JavaPlugin plugin;
+    private final PlayerDataStore store;
     private final NamespacedKey morphKey;
     private final Map<UUID, LivingEntity> morphs = new ConcurrentHashMap<>();
     private final Map<UUID, EntityType> morphTypes = new ConcurrentHashMap<>();
     private BukkitTask tickTask;
 
-    public MorphManager(JavaPlugin plugin) {
+    public MorphManager(JavaPlugin plugin, PlayerDataStore store) {
         this.plugin = plugin;
+        this.store = store;
         this.morphKey = new NamespacedKey(plugin, "morph-owner");
     }
 
@@ -118,7 +121,31 @@ public final class MorphManager {
             spawned.remove();
             return null;
         }
+        // Respect the player's self-view preference: hide the follower mob from
+        // their own client so it doesn't intercept their clicks/attacks.
+        if (store.isMorphSelfHidden(player.getUniqueId())) {
+            player.hideEntity(plugin, living);
+        }
         return living;
+    }
+
+    /**
+     * Toggles whether the player sees their own morph mob. Hidden = the mob is
+     * invisible to them only (others still see it) so it stops eating their
+     * clicks. Returns true if the mob is now hidden from the player.
+     */
+    public boolean toggleSelfView(Player player) {
+        boolean nowHidden = !store.isMorphSelfHidden(player.getUniqueId());
+        store.setMorphSelfHidden(player.getUniqueId(), nowHidden);
+        LivingEntity entity = morphs.get(player.getUniqueId());
+        if (entity != null) {
+            if (nowHidden) {
+                player.hideEntity(plugin, entity);
+            } else {
+                player.showEntity(plugin, entity);
+            }
+        }
+        return nowHidden;
     }
 
     public void unmorph(Player player, boolean silent) {

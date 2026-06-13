@@ -37,7 +37,7 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
         FileConfiguration config = getConfig();
 
         store = new PlayerDataStore(this);
-        morphManager = new MorphManager(this);
+        morphManager = new MorphManager(this, store);
         HornService horns = new HornService(config.getString("horn.variant", "RANDOM"));
 
         PatreonClient client = new PatreonClient(
@@ -61,6 +61,7 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
         getCommand("morph").setExecutor(morphCommand);
         getCommand("morph").setTabCompleter(morphCommand);
         getCommand("unmorph").setExecutor(morphCommand);
+        getCommand("morphview").setExecutor(morphCommand);
 
         Bukkit.getPluginManager().registerEvents(new MorphListeners(morphManager), this);
         Bukkit.getPluginManager().registerEvents(new PriorityJoinListener(this, store), this);

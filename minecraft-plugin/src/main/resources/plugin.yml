@@ -1,5 +1,5 @@
 name: EmeraldPerks
-version: "1.2.0"
+version: "1.3.0"
 main: dev.dailyemerald.perks.EmeraldPerksPlugin
 api-version: "1.21"
 description: Patreon-powered perks - patron morphing and goat horns for DailyEmerald.
@@ -16,6 +16,9 @@ commands:
   unmorph:
     description: Change back to yourself.
     usage: /unmorph
+  morphview:
+    description: Toggle whether you see your own morph (so it doesn't block your aim).
+    usage: /morphview
 
 permissions:
   emeraldperks.admin:
