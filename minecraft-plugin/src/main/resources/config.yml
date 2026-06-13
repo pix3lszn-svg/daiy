@@ -60,5 +60,12 @@ nations:
   # The list of available nations lives in nations.yml.
   enabled: true
 
+  # A "nation" is the broad pool (supporters + players). The "squad" is the
+  # ≤squad-size players who actually take the field, drawn from the nation with
+  # /nation draw <nation> (reserved players first, then a random fill of online
+  # members). Drawn players get the tag "squad_<nation>" — point your match
+  # datapack at that tag instead of nation_<nation> so only the squad plays.
+  squad-size: 12
+
 # When a pledge lapses, take the perks away on the next sync.
 revoke-when-pledge-ends: true

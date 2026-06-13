@@ -99,6 +99,25 @@ drop out. Available nations are seeded with `cherry` and managed by admins via
 `/nation create` / `/nation delete` (stored in `nations.yml`). Membership lives
 on the player's scoreboard tags, so it persists across restarts and is readable
 by your datapack. Set `nations.enabled: false` in config.yml to turn it off.
+
+#### Nations vs. squads (the match roster)
+
+A **nation** is the broad pool — supporters, fans, everyone who joins. The
+**squad** is the ≤12 who actually take the field, a subset of the nation:
+
+- `/nation reserve <nation> <player>` — guarantee someone a squad spot (admin)
+- `/nation draw <nation>` — pick the squad: reserved players first, then a
+  random fill from **online** nation members up to `squad-size` (default 12)
+- `/nation squad <nation>` — show the current squad
+- `/nation cleardraw <nation>` — empty the squad
+
+Drawn players get the tag **`squad_<nation>`** (and the `nation_<nation>` tag).
+Reserved players who are offline at draw time are remembered and tagged the
+moment they log in; cut players have their squad tag cleaned up on login too.
+
+Point your match datapack at `squad_<nation>` instead of `nation_<nation>` so
+only the squad plays. (The included Overworld Cup datapack edit does this in
+`cup:startmatch`.) `squad-size` is configurable in config.yml.
 | `/patreon sync` | admins | Pull the patron list right now |
 | `/patreon set <player> <board\|journalist\|none>` | admins | Manual grant/revoke (sync won't touch it) |
 | `/patreon horn <player>` | admins | Re-give a lost goat horn |

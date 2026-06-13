@@ -41,6 +41,19 @@ public final class NationCommand implements TabExecutor {
             case "delete", "remove" -> {
                 if (requireAdmin(sender)) delete(sender, args);
             }
+            case "reserve" -> {
+                if (requireAdmin(sender)) reserve(sender, args, true);
+            }
+            case "unreserve" -> {
+                if (requireAdmin(sender)) reserve(sender, args, false);
+            }
+            case "draw" -> {
+                if (requireAdmin(sender)) draw(sender, args);
+            }
+            case "cleardraw" -> {
+                if (requireAdmin(sender)) clearDraw(sender, args);
+            }
+            case "squad" -> squad(sender, args);
             default -> status(sender, label);
         }
         return true;
@@ -141,6 +154,100 @@ public final class NationCommand implements TabExecutor {
                 + "\" and removed everyone from it.", NamedTextColor.GREEN));
     }
 
+    private void reserve(CommandSender sender, String[] args, boolean add) {
+        if (args.length != 3) {
+            sender.sendMessage(Component.text("Usage: /nation " + (add ? "reserve" : "unreserve")
+                    + " <nation> <player>", NamedTextColor.YELLOW));
+            return;
+        }
+        String canon = nations.canonical(args[1]);
+        if (canon == null) {
+            sender.sendMessage(Component.text("There's no nation called \"" + args[1] + "\".", NamedTextColor.RED));
+            return;
+        }
+        String name = args[2];
+        if (add) {
+            if (nations.addReserved(canon, name)) {
+                sender.sendMessage(Component.text(name + " is now reserved for " + canon
+                        + "'s squad (guaranteed a spot when you draw).", NamedTextColor.GREEN));
+            } else {
+                sender.sendMessage(Component.text(name + " is already reserved for " + canon + ".",
+                        NamedTextColor.YELLOW));
+            }
+        } else {
+            if (nations.removeReserved(canon, name)) {
+                sender.sendMessage(Component.text("Removed " + name + " from " + canon + "'s reserved list.",
+                        NamedTextColor.GREEN));
+            } else {
+                sender.sendMessage(Component.text(name + " wasn't reserved for " + canon + ".",
+                        NamedTextColor.YELLOW));
+            }
+        }
+    }
+
+    private void draw(CommandSender sender, String[] args) {
+        if (args.length != 2) {
+            sender.sendMessage(Component.text("Usage: /nation draw <nation>", NamedTextColor.YELLOW));
+            return;
+        }
+        String canon = nations.canonical(args[1]);
+        if (canon == null) {
+            sender.sendMessage(Component.text("There's no nation called \"" + args[1] + "\".", NamedTextColor.RED));
+            return;
+        }
+        NationManager.DrawResult result = nations.draw(canon);
+        sender.sendMessage(Component.text("Drew " + canon + "'s squad: ", NamedTextColor.GREEN)
+                .append(Component.text(result.squad().size() + "/" + nations.squadSize(), NamedTextColor.GOLD))
+                .append(Component.text(" players (" + result.reservedCount() + " reserved + "
+                        + result.randomCount() + " random from " + result.eligibleOnline()
+                        + " online members).", NamedTextColor.WHITE)));
+        sender.sendMessage(Component.text("Squad: " + String.join(", ", result.squad()), NamedTextColor.GRAY));
+        if (!result.offlineMembers().isEmpty()) {
+            sender.sendMessage(Component.text("Offline (will be tagged when they next join): "
+                    + String.join(", ", result.offlineMembers()), NamedTextColor.YELLOW));
+        }
+        if (result.squad().size() < nations.squadSize()) {
+            sender.sendMessage(Component.text("Note: not enough online members to fill all "
+                    + nations.squadSize() + " slots.", NamedTextColor.YELLOW));
+        }
+    }
+
+    private void clearDraw(CommandSender sender, String[] args) {
+        if (args.length != 2) {
+            sender.sendMessage(Component.text("Usage: /nation cleardraw <nation>", NamedTextColor.YELLOW));
+            return;
+        }
+        String canon = nations.canonical(args[1]);
+        if (canon == null) {
+            sender.sendMessage(Component.text("There's no nation called \"" + args[1] + "\".", NamedTextColor.RED));
+            return;
+        }
+        sender.sendMessage(nations.clearSquad(canon)
+                ? Component.text("Cleared " + canon + "'s squad.", NamedTextColor.GREEN)
+                : Component.text(canon + " has no drawn squad.", NamedTextColor.YELLOW));
+    }
+
+    private void squad(CommandSender sender, String[] args) {
+        if (args.length != 2) {
+            sender.sendMessage(Component.text("Usage: /nation squad <nation>", NamedTextColor.YELLOW));
+            return;
+        }
+        String canon = nations.canonical(args[1]);
+        if (canon == null) {
+            sender.sendMessage(Component.text("There's no nation called \"" + args[1] + "\".", NamedTextColor.RED));
+            return;
+        }
+        List<String> squad = nations.squadFor(canon);
+        if (squad.isEmpty()) {
+            sender.sendMessage(Component.text(canon + " has no squad drawn yet. An admin runs /nation draw "
+                    + canon + ".", NamedTextColor.YELLOW));
+            return;
+        }
+        sender.sendMessage(Component.text(canon + " squad (" + squad.size() + "/" + nations.squadSize() + "): ",
+                        NamedTextColor.GREEN)
+                .append(Component.text(String.join(", ", squad), NamedTextColor.GOLD)));
+    }
+
     private void status(CommandSender sender, String label) {
         sender.sendMessage(Component.text("— Nations —", NamedTextColor.GOLD));
         sender.sendMessage(Component.text("/" + label + " list — see the nations you can join",
@@ -149,10 +256,16 @@ public final class NationCommand implements TabExecutor {
                 NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("/" + label + " leave — leave your nation",
                 NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("/" + label + " squad <name> — see a nation's match squad",
+                NamedTextColor.YELLOW));
         if (sender.hasPermission(ADMIN_PERM)) {
-            sender.sendMessage(Component.text("/" + label + " create <name> — add a nation (admin)",
+            sender.sendMessage(Component.text("/" + label + " create|delete <name> — add/remove a nation (admin)",
                     NamedTextColor.GRAY));
-            sender.sendMessage(Component.text("/" + label + " delete <name> — remove a nation (admin)",
+            sender.sendMessage(Component.text("/" + label + " reserve|unreserve <nation> <player> (admin)",
+                    NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/" + label + " draw <nation> — pick the ≤"
+                    + nations.squadSize() + " squad (admin)", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/" + label + " cleardraw <nation> — empty the squad (admin)",
                     NamedTextColor.GRAY));
         }
         if (sender instanceof Player player) {
@@ -173,18 +286,26 @@ public final class NationCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> subs = new ArrayList<>(List.of("join", "leave", "list"));
+            List<String> subs = new ArrayList<>(List.of("join", "leave", "list", "squad"));
             if (sender.hasPermission(ADMIN_PERM)) {
-                subs.add("create");
-                subs.add("delete");
+                subs.addAll(List.of("create", "delete", "reserve", "unreserve", "draw", "cleardraw"));
             }
             return subs.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }
         if (args.length == 2) {
             String sub = args[0].toLowerCase(Locale.ROOT);
-            if (sub.equals("join") || sub.equals("delete") || sub.equals("remove")) {
+            if (List.of("join", "delete", "remove", "reserve", "unreserve", "draw", "cleardraw", "squad")
+                    .contains(sub)) {
                 String prefix = args[1].toLowerCase(Locale.ROOT);
                 return nations.available().stream()
+                        .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(prefix)).toList();
+            }
+        }
+        if (args.length == 3) {
+            String sub = args[0].toLowerCase(Locale.ROOT);
+            if (sub.equals("reserve") || sub.equals("unreserve")) {
+                String prefix = args[2].toLowerCase(Locale.ROOT);
+                return Bukkit.getOnlinePlayers().stream().map(Player::getName)
                         .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(prefix)).toList();
             }
         }

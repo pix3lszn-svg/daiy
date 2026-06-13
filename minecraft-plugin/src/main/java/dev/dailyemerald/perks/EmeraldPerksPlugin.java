@@ -30,6 +30,7 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
     private PlayerDataStore store;
     private MorphManager morphManager;
     private PatreonSyncService syncService;
+    private dev.dailyemerald.perks.nations.NationManager nations;
 
     @Override
     public void onEnable() {
@@ -63,8 +64,8 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
         getCommand("unmorph").setExecutor(morphCommand);
         getCommand("morphview").setExecutor(morphCommand);
 
-        dev.dailyemerald.perks.nations.NationManager nations =
-                new dev.dailyemerald.perks.nations.NationManager(this, config.getBoolean("nations.enabled", true));
+        nations = new dev.dailyemerald.perks.nations.NationManager(
+                this, config.getBoolean("nations.enabled", true), config.getInt("nations.squad-size", 12));
         dev.dailyemerald.perks.command.NationCommand nationCommand =
                 new dev.dailyemerald.perks.command.NationCommand(nations);
         getCommand("nation").setExecutor(nationCommand);
@@ -105,6 +106,7 @@ public final class EmeraldPerksPlugin extends JavaPlugin implements Listener {
                     completePendingLink(player);
                     syncService.giveHornIfOwed(player);
                     applyAdventureIfPatron(player);
+                    nations.reconcileSquadTags(player);
                 }, 40L);
     }
 
