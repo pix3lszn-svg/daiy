@@ -1,0 +1,30 @@
+name: EmeraldMorph
+version: "1.0.0"
+main: dev.dailyemerald.morph.EmeraldMorphPlugin
+api-version: "1.21"
+description: Standalone morphing - become any mob, including styled villagers.
+author: DailyEmerald
+
+commands:
+  morph:
+    description: Morph into a mob. Villagers take styles - /morph villager [biome] [job].
+    usage: /morph <mob>
+  unmorph:
+    description: Change back to yourself.
+    usage: /unmorph
+  morphview:
+    description: Toggle whether you see your own morph (so it doesn't block your aim).
+    usage: /morphview
+  allowmorph:
+    description: Enable /morph for everyone, or for one player.
+    usage: /allowmorph [player]
+    permission: emeraldmorph.admin
+  unallowmorph:
+    description: Make /morph OP-only again (reverts morphed players), or revoke one player.
+    usage: /unallowmorph [player]
+    permission: emeraldmorph.admin
+
+permissions:
+  emeraldmorph.admin:
+    description: Manage who is allowed to morph.
+    default: op

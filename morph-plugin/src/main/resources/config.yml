@@ -1,0 +1,19 @@
+# ============================================================
+# EmeraldMorph configuration
+# ============================================================
+
+# Extra mobs nobody may morph into (upper- or lowercase entity ids).
+# The ender dragon is ALWAYS blocked in code (it ignores the no-AI flag and
+# would fly off and wreck things), so you don't need to list it here.
+# Example:
+# blocked-mobs:
+#   - WITHER
+#   - WARDEN
+blocked-mobs: []
+
+# Who may morph is controlled in-game, not here:
+#   /allowmorph              -> everyone may /morph
+#   /allowmorph <player>     -> just that player
+#   /unallowmorph            -> OP-only again (reverts morphed players)
+#   /unallowmorph <player>   -> revoke one player
+# The state is saved in data.yml and survives restarts.
