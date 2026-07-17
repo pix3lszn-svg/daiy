@@ -1,0 +1,111 @@
+==========================================================
+  EMERALDMORPH 1.1.0 - EVERYTHING IT DOES
+==========================================================
+
+A standalone morph plugin for Paper 1.21.11. No other plugins
+needed. Morphs are real entities, so they render correctly for
+both Java players AND Bedrock players joining through Geyser.
+
+HOW MORPHING WORKS
+  When you morph, you turn invisible and a real mob with your
+  name appears and copies your every movement. Other players
+  see the mob, not you. The mob can't be hurt, traded with,
+  pushed, or targeted by other mobs. You keep your own health,
+  hitbox and abilities (it's a visual disguise - a creeper
+  morph doesn't explode).
+
+----------------------------------------------------------
+  PLAYER COMMANDS
+----------------------------------------------------------
+
+/morph <mob>
+    Become any mob. Tab-complete lists every option
+    (all real mobs; the ender dragon is always blocked).
+    Example: /morph creeper
+
+/morph villager [biome] [job]
+    Become a styled villager. Both extras are optional and
+    work in either order.
+      Biomes: desert, jungle, plains, savanna, snow, swamp, taiga
+      Jobs:   armorer, butcher, cartographer, cleric, farmer,
+              fisherman, fletcher, leatherworker, librarian,
+              mason, nitwit, shepherd, toolsmith, weaponsmith
+    Examples:
+      /morph villager plains librarian
+      /morph villager snow
+      /morph villager farmer
+
+/unmorph   (or /morph off)
+    Change back to yourself.
+
+/morphview
+    Toggle whether YOU see your own morph mob. Hide it and it
+    stops getting in the way of your clicks and aim - everyone
+    else still sees it. Your choice is remembered.
+
+----------------------------------------------------------
+  OPERATOR COMMANDS  (OPs / emeraldmorph.admin)
+----------------------------------------------------------
+
+WHO CAN MORPH (fresh install = OPs only):
+/allowmorph
+    Everyone on the server may /morph (announced in chat).
+/allowmorph <player>
+    Give just that player access.
+/unallowmorph
+    Back to OP-only. Clears every grant AND changes every
+    morphed non-OP back to a regular player.
+/unallowmorph <player>
+    Revoke one player (changes them back if morphed). Warns
+    you if the everyone-switch is still on.
+
+FORCED MORPHS (work even on players without access):
+/morphall <mob> [biome] [job]
+    Morph EVERY online player. e.g. /morphall chicken
+/morphall off
+    Change everyone back.
+/morphplayer <player> <mob> [biome] [job]
+    Morph one specific player. e.g. /morphplayer Steve villager
+    swamp nitwit
+/morphplayer <player> off
+    Change that player back.
+
+----------------------------------------------------------
+  AUTOMATIC BEHAVIOUR
+----------------------------------------------------------
+
+- Morphs end on: logout, death, changing worlds, going into
+  spectator mode, or the server stopping. Just morph again.
+- Access grants and everyone-mode survive restarts
+  (plugins/EmeraldMorph/data.yml).
+- Nobody can open a trade window on a morphed "villager" or
+  hurt/push the morph mob.
+- Your floating name tag is hidden while morphed; the mob
+  carries your name instead.
+
+----------------------------------------------------------
+  CONFIG  (plugins/EmeraldMorph/config.yml)
+----------------------------------------------------------
+
+blocked-mobs: []
+    Extra mobs nobody may morph into, e.g.
+      blocked-mobs:
+        - WITHER
+        - WARDEN
+    The ender dragon is always blocked in code (it ignores
+    the no-AI flag and would fly around wrecking things).
+
+----------------------------------------------------------
+  KNOWN QUIRKS
+----------------------------------------------------------
+
+- Worn armor and held items still render on your invisible
+  body (a vanilla invisibility quirk). Stow armor for the
+  clean look.
+- The morph is cosmetic: no mob abilities, no mob hitbox.
+- Don't run this alongside another plugin that registers
+  /morph (e.g. EmeraldPerks' built-in morph) - the commands
+  will clash. One morph system per server.
+
+INSTALL: drop EmeraldMorph-1.1.0.jar into plugins/, restart.
+==========================================================

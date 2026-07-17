@@ -31,6 +31,13 @@ public final class EmeraldMorphPlugin extends JavaPlugin {
         getCommand("unmorph").setExecutor(morphCommand);
         getCommand("morphview").setExecutor(morphCommand);
 
+        dev.dailyemerald.morph.command.AdminMorphCommand adminCommand =
+                new dev.dailyemerald.morph.command.AdminMorphCommand(morphManager);
+        getCommand("morphall").setExecutor(adminCommand);
+        getCommand("morphall").setTabCompleter(adminCommand);
+        getCommand("morphplayer").setExecutor(adminCommand);
+        getCommand("morphplayer").setTabCompleter(adminCommand);
+
         AllowMorphCommand allowCommand = new AllowMorphCommand(access, morphManager);
         getCommand("allowmorph").setExecutor(allowCommand);
         getCommand("allowmorph").setTabCompleter(allowCommand);

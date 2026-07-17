@@ -76,5 +76,5 @@ javac --release 21 -encoding UTF-8 -implicit:none -proc:none \
 
 # 5. Package
 cp src/main/resources/plugin.yml src/main/resources/config.yml target/classes/
-jar cf target/EmeraldMorph-1.0.0.jar -C target/classes .
-echo "Built target/EmeraldMorph-1.0.0.jar"
+jar cf target/EmeraldMorph-1.1.0.jar -C target/classes .
+echo "Built target/EmeraldMorph-1.1.0.jar"

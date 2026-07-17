@@ -1,5 +1,5 @@
 name: EmeraldMorph
-version: "1.0.0"
+version: "1.1.0"
 main: dev.dailyemerald.morph.EmeraldMorphPlugin
 api-version: "1.21"
 description: Standalone morphing - become any mob, including styled villagers.
@@ -15,6 +15,14 @@ commands:
   morphview:
     description: Toggle whether you see your own morph (so it doesn't block your aim).
     usage: /morphview
+  morphall:
+    description: Morph every online player into a mob (or "off" to revert everyone).
+    usage: /morphall <mob>
+    permission: emeraldmorph.admin
+  morphplayer:
+    description: Morph a specific player into a mob (or "off" to revert them).
+    usage: /morphplayer <player> <mob>
+    permission: emeraldmorph.admin
   allowmorph:
     description: Enable /morph for everyone, or for one player.
     usage: /allowmorph [player]
